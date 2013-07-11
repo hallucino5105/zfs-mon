@@ -1,0 +1,107 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+"""
+Usage:
+    zfs-mon (--seconds=<seconds>) 
+    zfs-mon (-h | --help | --version)
+
+
+Options:
+  -h --help                     show this screen.
+  -s --seconds=<seconds>        Seconds [default: 60].
+  --version                     print version.
+
+"""
+
+from docopt import docopt
+import time
+
+if __name__ == '__main__':
+    arguments = docopt(__doc__, version='1.0.0.1')
+    
+    seconds = float(arguments["--seconds"])
+
+    def get_arcstat():
+
+        data = dict(
+            {"ARC": {"HIT": None, "MISS": None},
+             "ARCDD": {"HIT": None, "MISS": None},
+             "ARCDM": {"HIT": None, "MISS": None},
+             "ARCPD": {"HIT": None, "MISS": None},
+             "ARCPM": {"HIT": None, "MISS": None},
+             "L2": {"HIT": None, "MISS": None},
+             "ZFETCH": {"HIT": None, "MISS": None}}
+        )
+
+        variables = dict(
+            {"ARC": {"HIT": "hits", "MISS": "misses"},
+            "ARCDD": {"HIT": "demand_data_hits", "MISS": "demand_data_misses"},
+            "ARCDM": {"HIT": "demand_metadata_hits", "MISS": "demand_metadata_misses"},
+            "ARCPD": {"HIT": "prefetch_data_hits", "MISS": "prefetch_data_misses"},
+            "ARCPM": {"HIT": "prefetch_metadata_hits", "MISS": "prefetch_metadata_misses"},
+            "L2": {"HIT": "l2_hits", "MISS": "l2_misses"}}
+        )
+        zfetch_variables = dict(
+            {"ZFETCH": {"HIT": "hits", "MISS": "misses"}}
+        )
+
+        arcstat = open("/proc/spl/kstat/zfs/arcstats").readlines()
+        zfetchstat = open("/proc/spl/kstat/zfs/zfetchstats").readlines()
+
+        for key, value in variables.items():
+            data[key]['HIT'] = list(filter(lambda x: x.split(' ')[0] == value['HIT'], arcstat[2:]))[0].split(' ')[-1].strip()
+            data[key]['MISS'] = list(filter(lambda x: x.split(' ')[0] == value['MISS'], arcstat[2:]))[0].split(' ')[-1].strip()
+
+        for key, value in zfetch_variables.items():
+            data[key]['HIT'] = list(filter(lambda x: x.split(' ')[0] == value['HIT'], zfetchstat[2:]))[0].split(' ')[-1].strip()
+            data[key]['MISS'] = list(filter(lambda x: x.split(' ')[0] == value['MISS'], zfetchstat[2:]))[0].split(' ')[-1].strip()
+
+        return data
+
+    data = get_arcstat()
+    time.sleep(1)
+    second_data = get_arcstat()
+    time.sleep(seconds)
+    data2 = get_arcstat()
+
+    cache_efficiency = dict(
+        {"ARC": None,
+         "ARCDD": None,
+         "ARCDM": None,
+         "ARCPD": None,
+         "ARCPM": None,
+         "L2": None,
+         "ZFETCH": None}
+    )
+
+    for key in cache_efficiency.keys():
+        try:
+            cache_efficiency[key] = round((int(data2[key]["HIT"]) - int(data[key]["HIT"])) * 100 / \
+                                    (int(data2[key]["HIT"]) - int(data[key]["HIT"]) + int(data2[key]["MISS"]) - int(data[key]["MISS"])))
+        except ZeroDivisionError:
+            cache_efficiency[key] = 0
+
+    print("ZFS real-time cache activity monitor")
+    print("Seconds elapsed: %s" % str(seconds))
+    print("Cache hits and misses:")
+    print("ARC hits: %s" % str(int(data2["ARC"]["HIT"]) - int(data["ARC"]["HIT"])))
+    print("ARC misses: %s" % str(int(data2["ARC"]["MISS"]) - int(data["ARC"]["MISS"])))
+    print("ARC demand data hits: %s" % str(int(data2["ARCDD"]["HIT"]) - int(data["ARCDD"]["HIT"])))
+    print("ARC demand data misses: %s" % str(int(data2["ARCDD"]["MISS"]) - int(data["ARCDD"]["MISS"])))
+    print("ARC demand metadata hits: %s" % str(int(data2["ARCDM"]["HIT"]) - int(data["ARCDM"]["HIT"])))
+    print("ARC demand metadata misses: %s" % str(int(data2["ARCDM"]["MISS"]) - int(data["ARCDM"]["MISS"])))
+    print("ARC prefetch data hits: %s" % str(int(data2["ARCPD"]["HIT"]) - int(data["ARCPD"]["HIT"])))
+    print("ARC prefetch data misses: %s" % str(int(data2["ARCPD"]["MISS"]) - int(data["ARCPD"]["MISS"])))
+    print("ARC prefetch metadata hits: %s" % str(int(data2["ARCPM"]["HIT"]) - int(data["ARCPM"]["HIT"])))
+    print("ARC prefetch metadata misses: %s" % str(int(data2["ARCPM"]["MISS"]) - int(data["ARCPM"]["MISS"])))
+    print("L2ARC hits: %s" % str(int(data2["L2"]["HIT"]) - int(data["L2"]["HIT"])))
+    print("L2ARC misses: %s" % str(int(data2["L2"]["MISS"]) - int(data["L2"]["MISS"])))
+    print("ZFETCH hits: %s" % str(int(data2["ZFETCH"]["HIT"]) - int(data["ZFETCH"]["HIT"])))
+    print("ZFETCH misses: %s" % str(int(data2["ZFETCH"]["MISS"]) - int(data["ZFETCH"]["MISS"])))
+    print("ARC cache efficiency percentage: %s" % str(cache_efficiency["ARC"]))
+    print("ARC demand data cache efficiency percentage: %s" % str(cache_efficiency["ARCDD"]))
+    print("ARC prefetch data cache efficiency percentage: %s" % str(cache_efficiency["ARCPD"]))
+    print("ARC prefetch metadata cache efficiency percentage: %s" % str(cache_efficiency["ARCPM"]))
+    print("L2ARC cache efficiency percentage: %s" % str(cache_efficiency["L2"]))
+    print("ZFETCH cache efficiency percentage: %s" % str(cache_efficiency["ZFETCH"]))
