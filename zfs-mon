@@ -16,12 +16,42 @@ Options:
 
 from docopt import docopt
 import time
+import ujson
+import queue
+
+import curses
+import locale
+
+from zfs_monitor.collect_daemon import CollectDaemon
+
+
+def main():
+    locale.setlocale(locale.LC_ALL, '')
+
+    stdscr = curses.initscr()
+    stdscr.keypad(1)
+    curses.curs_set(0)
+    stdscr.border(0)
+
+    data_queue = queue.Queue()
+    daemon = CollectDaemon(data_queue)
+    daemon.run()
+
+    while True:
+
+        cache_efficiency = ujson.loads(data_queue.get())
+
+        stdscr.addstr(12, 25, str(cache_efficiency))
+        stdscr.refresh()
+        curses.endwin()
 
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='1.0.0.1')
 
     seconds = float(arguments["--seconds"])
 
+    main()
+"""
     def get_arcstat():
 
         data = dict(
@@ -158,3 +188,6 @@ if __name__ == '__main__':
 
     print("ZFETCH cache efficiency percentage: %s" %
           str(cache_efficiency["ZFETCH"]))
+"""
+
+
