@@ -18,15 +18,30 @@ def main():
     try:
         while True:
             myscreen = curses.initscr()
+            curses.start_color()
+            curses.init_pair(1, curses.COLOR_BLUE, curses.COLOR_BLACK)
+            curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
+            curses.init_pair(3, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+            curses.init_pair(4, curses.COLOR_CYAN, curses.COLOR_BLACK)
+            curses.init_pair(5, curses.COLOR_GREEN, curses.COLOR_BLACK)
+            curses.curs_set(0)
+            myscreen.border(0)
+
             myscreen.clear()
             result = ujson.loads(data_queue.get())
-            myscreen.addstr(1, 0, "ZFS real-time cache activity monitor")
-            myscreen.addstr(2, 0, "Updating every second")
-            myscreen.addstr(3, 0, "Cache hits and misses:")
+            myscreen.addstr(1, 0, "ZFS real-time cache activity monitor",
+                            curses.color_pair(1))
+            myscreen.addstr(2, 0, "Updating every second", curses.color_pair(1))
+            myscreen.addstr(3, 0, "Cache hits and misses:",
+                            curses.color_pair(1))
+
             myscreen.addstr(4, 0, "ARC hits: %s" % result[1]["ARC_HIT"])
+            
             myscreen.addstr(5, 0, "ARC misses: %s" % result[1]["ARC_MISS"])
+
             myscreen.addstr(6, 0, "ARC demand data hits: %s" %
                                   result[1]["ARC_DDH"])
+
             myscreen.addstr(7, 0, "ARC demand data misses: %s" %
                                   result[1]["ARC_DDM"])
             myscreen.addstr(8, 0, "ARC demand metadata hits: %s" %
@@ -46,21 +61,46 @@ def main():
             myscreen.addstr(18, 0, "ZFETCH hits: %s" % result[1]["ZFETCH_HIT"])
             myscreen.addstr(19, 0, "ZFETCH misses: %s" %
                                    result[1]["ZFETCH_MISS"])
-            myscreen.addstr(21, 0, "ARC cache efficiency percentage: %s" %
-                                   result[0]["ARC"])
+
+            myscreen.addstr(21, 0, "ARC cache efficiency percentage:")
+
+            myscreen.addstr(21, 60, "%s" % result[0]["ARC"],
+                            curses.color_pair(color_choice(result[0]["ARC"])))
+
             myscreen.addstr(22, 0, "ARC demand data cache efficiency "
-                                   "percentage: %s" % result[0]["ARCDD"])
+                                   "percentage:")
+            myscreen.addstr(22, 60, "%s" % result[0]["ARCDD"],
+                            curses.color_pair(color_choice(result[0]["ARCDD"])))
+
             myscreen.addstr(23, 0, "ARC prefetch data cache efficiency "
-                                   "percentage: %s" % result[0]["ARCPD"])
+                                   "percentage:")
+            myscreen.addstr(23, 60, "%s" % result[0]["ARCPD"],
+                            curses.color_pair(color_choice(result[0]["ARCPD"])))
+
             myscreen.addstr(24, 0, "ARC prefetch metadata cache efficiency "
-                                   "percentage: %s" % result[0]["ARCPM"])
-            myscreen.addstr(25, 0, "L2ARC cache efficiency percentage: %s" %
-                                   result[0]["L2"])
-            myscreen.addstr(26, 0, "ZFETCH cache efficiency percentage: %s" %
-                                   result[0]["ZFETCH"])
+                                   "percentage:")
+            myscreen.addstr(24, 60, "%s" % result[0]["ARCPM"],
+                            curses.color_pair(color_choice(result[0]["ARCPM"])))
+
+            myscreen.addstr(25, 0, "L2ARC cache efficiency percentage:")
+            myscreen.addstr(25, 60, "%s" % result[0]["L2"],
+                            curses.color_pair(color_choice(result[0]["L2"])))
+
+            myscreen.addstr(26, 0, "ZFETCH cache efficiency percentage:")
+            myscreen.addstr(26, 60, "%s" % result[0]["ZFETCH"],
+                            curses.color_pair(color_choice(result[0]["ZFETCH"])))
             myscreen.refresh()
     except KeyboardInterrupt:
         curses.endwin()
+
+
+def color_choice(value):
+    if value < 50:
+        return 2
+    elif 50 < value < 85:
+        return 4
+    else:
+        return 5
 
 
 if __name__ == '__main__':
