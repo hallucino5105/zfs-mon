@@ -8,5 +8,6 @@ setup(
     author='Andrey Platonov',
     author_email='poluandrey@gmail.com',
     url='https://github.com/tears-of-noobs/zfs-mon.git',
+    packages=['zfs_monitor'],
     scripts=['zfs-mon']
 )

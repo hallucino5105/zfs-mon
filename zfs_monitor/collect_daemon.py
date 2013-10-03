@@ -2,7 +2,6 @@ import threading
 import ujson
 import time
 import copy
-import queue
 
 
 class CollectDaemon(threading.Thread):
@@ -68,16 +67,49 @@ class CollectDaemon(threading.Thread):
                 except ZeroDivisionError:
                     cache_efficiency[key] = 0
 
-            self.data_queue.put(ujson.dumps(cache_efficiency))
-        #print(ujson.dumps(zfs_data))
-        #decode_data = ujson.dumps(zfs_data)
-        #outfile = open(self.tmp_filepath, "w")
-        #try:
-        #    outfile.write(decode_data)
-        #except Exception as e:
-        #    print(str(e))
-        #finally:
-        #    outfile.close()
+            zfs_result = dict()
+            zfs_result["ARC_HIT"] = int(new_zfs_data["ARC"]["HIT"]) - \
+                                    int(initial_zfs_data["ARC"]["HIT"])
+            zfs_result["ARC_MISS"] = int(new_zfs_data["ARC"]["MISS"]) - \
+                                     int(initial_zfs_data["ARC"]["MISS"])
+
+            zfs_result["ARC_DDH"] = int(new_zfs_data["ARCDD"]["HIT"]) - \
+                                    int(initial_zfs_data["ARCDD"]["HIT"])
+            zfs_result["ARC_DDM"] = int(new_zfs_data["ARCDD"]["MISS"]) - \
+                                    int(initial_zfs_data["ARCDD"]["MISS"])
+
+            zfs_result["ARC_DMH"] = int(new_zfs_data["ARCDM"]["HIT"]) - \
+                                    int(initial_zfs_data["ARCDM"]["HIT"])
+
+            zfs_result["ARC_DMM"] = int(new_zfs_data["ARCDM"]["MISS"]) - \
+                                    int(initial_zfs_data["ARCDM"]["MISS"])
+
+            zfs_result["ARC_PDH"] = int(new_zfs_data["ARCPD"]["HIT"]) - \
+                                    int(initial_zfs_data["ARCPD"]["HIT"])
+
+            zfs_result["ARC_PDM"] = int(new_zfs_data["ARCPD"]["MISS"]) - \
+                                    int(initial_zfs_data["ARCPD"]["MISS"])
+
+            zfs_result["ARC_PMH"] = int(new_zfs_data["ARCPM"]["HIT"]) - \
+                                    int(initial_zfs_data["ARCPM"]["HIT"])
+
+            zfs_result["ARC_PMM"] = int(new_zfs_data["ARCPM"]["MISS"]) - \
+                                    int(initial_zfs_data["ARCPM"]["MISS"])
+
+            zfs_result["L2ARC_HIT"] = int(new_zfs_data["L2"]["HIT"]) - \
+                                    int(initial_zfs_data["L2"]["HIT"])
+
+            zfs_result["L2ARC_MISS"] = int(new_zfs_data["L2"]["MISS"]) - \
+                                    int(initial_zfs_data["L2"]["MISS"])
+
+            zfs_result["ZFETCH_HIT"] = int(new_zfs_data["ZFETCH"]["HIT"]) - \
+                                    int(initial_zfs_data["ZFETCH"]["HIT"])
+
+            zfs_result["ZFETCH_MISS"] = int(new_zfs_data["ZFETCH"]["MISS"]) - \
+                                    int(initial_zfs_data["ZFETCH"]["MISS"])
+
+            self.data_queue.put(ujson.dumps([cache_efficiency,
+                                             zfs_result]))
 
     def __get_data(self):
         # Getting params of ZFS cache
@@ -106,7 +138,3 @@ class CollectDaemon(threading.Thread):
                 zfetchstat[2:]))[0].split(' ')[-1].strip()
 
         return self.zfs_data
-
-        #while True:
-        #    pass
-
