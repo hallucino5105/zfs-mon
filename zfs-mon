@@ -1,21 +1,5 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-
-"""
-Usage:
-    zfs-mon (--seconds=<seconds>)
-    zfs-mon (-h | --help | --version)
-
-
-Options:
-  -h --help                     show this screen.
-  -s --seconds=<seconds>        Seconds [default: 60].
-  --version                     print version.
-
-"""
-
-from docopt import docopt
-import time
 import ujson
 import queue
 import locale
@@ -29,6 +13,7 @@ def main():
 
     data_queue = queue.Queue()
     daemon = CollectDaemon(data_queue)
+    daemon.daemon = True
     daemon.start()
     try:
         while True:
@@ -76,14 +61,9 @@ def main():
             myscreen.refresh()
     except KeyboardInterrupt:
         curses.endwin()
-        print("Exit")
 
 
 if __name__ == '__main__':
-    #arguments = docopt(__doc__, version='1.0.0.1')
-
-    #seconds = float(arguments["--seconds"])
-
     main()
 
 

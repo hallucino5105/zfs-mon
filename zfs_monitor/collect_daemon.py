@@ -58,12 +58,13 @@ class CollectDaemon(threading.Thread):
 
             for key in cache_efficiency.keys():
                 try:
-                    cache_efficiency[key] = round((int(new_zfs_data[key]["HIT"]) -
-                                                   int(initial_zfs_data[key]["HIT"])) * 100 /
-                                                  (int(new_zfs_data[key]["HIT"]) -
-                                                   int(initial_zfs_data[key]["HIT"]) +
-                                                   int(new_zfs_data[key]["MISS"]) -
-                                                   int(initial_zfs_data[key]["MISS"])))
+                    cache_efficiency[key] = \
+                        round((int(new_zfs_data[key]["HIT"]) -
+                               int(initial_zfs_data[key]["HIT"])) * 100 /
+                              (int(new_zfs_data[key]["HIT"]) -
+                               int(initial_zfs_data[key]["HIT"]) +
+                               int(new_zfs_data[key]["MISS"]) -
+                               int(initial_zfs_data[key]["MISS"])))
                 except ZeroDivisionError:
                     cache_efficiency[key] = 0
 
