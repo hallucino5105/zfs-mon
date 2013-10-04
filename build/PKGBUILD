@@ -1,0 +1,17 @@
+pkgname=zfs-mon
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="ZFS real time cache activity monitor"
+arch=('x86_64')
+license=('GPL')
+depends=('python' 'python-pip')
+source=("git+https://github.com/tears-of-noobs/zfs-mon.git")
+sha1sums=('SKIP')
+
+build() {
+        pip3 install ujson
+    }
+
+package() {
+       cd $srcdir/zfs-mon && python3 setup.py install --root $pkgdir
+    }

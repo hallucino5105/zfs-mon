@@ -95,7 +95,7 @@ def main():
 
 
 def color_choice(value):
-    if value < 50:
+    if value <= 50:
         return 2
     elif 50 < value < 85:
         return 4
